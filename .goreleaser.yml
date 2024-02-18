@@ -1,5 +1,7 @@
 builds:
   - dir: .
+    goos: [linux]
+    goarch: [amd64]
 checksum:
   name_template: checksums.txt
 snapshot:
