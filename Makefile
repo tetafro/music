@@ -12,4 +12,4 @@ build:
 
 .PHONY: run
 run:
-	./bin/yamusic -token $(shell cat token.txt)
+	./bin/yamusic -config config.yaml

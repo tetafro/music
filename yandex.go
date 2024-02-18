@@ -62,14 +62,8 @@ func (t Track) String() string {
 }
 
 // InitClient creates new Yandex client and fetches current user profile.
-func InitClient(
-	ctx context.Context,
-	token string,
-	favid int,
-	tracksDir string,
-	playlistsDir string,
-) (*YandexClient, error) {
-	client := yamusic.NewClient(yamusic.AccessToken(0, token))
+func InitClient(ctx context.Context, conf Config) (*YandexClient, error) {
+	client := yamusic.NewClient(yamusic.AccessToken(0, conf.Token))
 
 	// Set user id to avoid passing it to each method
 	status, _, err := client.Account().GetStatus(ctx) //nolint:bodyclose
@@ -81,9 +75,9 @@ func InitClient(
 	ya := &YandexClient{
 		api:          client,
 		http:         rhttp.NewClient(),
-		favid:        favid,
-		tracksDir:    tracksDir,
-		playlistsDir: playlistsDir,
+		favid:        conf.FavID,
+		tracksDir:    conf.TracksDir,
+		playlistsDir: conf.PlaylistsDir,
 	}
 	ya.http.RetryMax = 5
 	ya.http.RetryWaitMin = 10 * time.Second

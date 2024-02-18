@@ -2,4 +2,4 @@
 /playlists/
 /tracks/
 /*.yaml
-/token.txt
+/config.yaml

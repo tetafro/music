@@ -4,7 +4,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -12,10 +11,7 @@ import (
 )
 
 func main() {
-	token := flag.String("token", "", "Yandex.Music auth token")
-	favid := flag.Int("fav", 3, "'Favourites' playlist id")
-	playlistsDir := flag.String("playlists", "playlists", "Directory for playlist files")
-	tracksDir := flag.String("tracks", "tracks", "Directory for track files")
+	configFile := flag.String("config", "config.yaml", "Configuration file")
 	flag.Parse()
 
 	ctx, cancel := signal.NotifyContext(
@@ -25,23 +21,20 @@ func main() {
 	)
 	defer cancel()
 
-	log.Print("Init client")
-	client, err := InitClient(
-		ctx, *token, *favid,
-		*playlistsDir, *tracksDir,
-	)
+	conf, err := ReadConfig(*configFile)
 	if err != nil {
-		fatalf("Failed to init client: %v", err)
+		log.Fatalf("Failed to read config: %v", err)
+	}
+
+	log.Print("Init client")
+	client, err := InitClient(ctx, conf)
+	if err != nil {
+		log.Fatalf("Failed to init client: %v", err)
 	}
 
 	log.Print("Start downloading")
 	if err = client.Download(ctx); err != nil {
-		fatalf("Failed to get playlists: %v", err)
+		log.Fatalf("Failed to get playlists: %v", err)
 	}
 	log.Print("Done")
-}
-
-func fatalf(format string, args ...interface{}) {
-	fmt.Printf(format+"\n", args...)
-	os.Exit(1)
 }
