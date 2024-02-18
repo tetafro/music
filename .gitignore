@@ -1,0 +1,5 @@
+/bin/
+/playlists/
+/tracks/
+/*.yaml
+/token.txt

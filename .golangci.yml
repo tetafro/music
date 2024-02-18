@@ -1,0 +1,75 @@
+run:
+  concurrency: 2
+  deadline: 5m
+  skip-files:
+    - "_mock\\.go$"
+
+linters:
+  disable-all: true
+  enable:
+    - asciicheck
+    - bodyclose
+    - cyclop
+    - dogsled
+    - durationcheck
+    - errcheck
+    - errname
+    - errorlint
+    - exhaustive
+    - exportloopref
+    - exportloopref
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - goerr113
+    - gofmt
+    - gofumpt
+    - goimports
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - importas
+    - ineffassign
+    - lll
+    - misspell
+    - nakedret
+    - nestif
+    - noctx
+    - nolintlint
+    - prealloc
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - sqlclosecheck
+    - staticcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - wastedassign
+    - whitespace
+    - wrapcheck
+
+issues:
+  exclude-use-default: false
+  exclude:
+    - "G404: Use of weak random number generator"
+    - "do not define dynamic errors, use wrapped static errors instead"
+    - "Error return value of `.*.Body.Close` is not checked"
+    - "G306: Expect WriteFile permissions to be 0600 or less"
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - goconst
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - noctx
+    - path: main.go
+      text: "`defer cancel\\(\\)` will not run"
