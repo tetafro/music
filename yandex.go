@@ -52,7 +52,10 @@ type Track struct {
 
 // String returns string representation of the track.
 func (t Track) String() string {
-	artists := t.Artists[:min(len(t.Artists), 3)]
+	artists := t.Artists
+	if len(artists) > 3 {
+		artists = artists[:3]
+	}
 	s := fmt.Sprintf("%s - %s", strings.Join(artists, ", "), t.Title)
 	s = strings.ReplaceAll(s, "/", "-")
 	return s
