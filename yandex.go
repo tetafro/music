@@ -223,12 +223,6 @@ func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist)
 }
 
 func (c *YandexClient) downloadTrack(ctx context.Context, track Track, file string) error {
-	f, err := os.OpenFile(file, os.O_CREATE|os.O_RDWR, 0o600) //nolint:gosec
-	if os.IsExist(err) {
-		return errTrackExists
-	}
-	defer f.Close() //nolint:errcheck
-
 	url, err := c.api.Tracks().GetDownloadURL(ctx, track.ID)
 	if err != nil {
 		return errTrackNotAvailable
@@ -244,6 +238,12 @@ func (c *YandexClient) downloadTrack(ctx context.Context, track Track, file stri
 		return fmt.Errorf("get data: %w", err)
 	}
 	defer resp.Body.Close()
+
+	f, err := os.OpenFile(file, os.O_CREATE|os.O_RDWR, 0o600) //nolint:gosec
+	if os.IsExist(err) {
+		return errTrackExists
+	}
+	defer f.Close() //nolint:errcheck
 
 	if _, err := io.Copy(f, resp.Body); err != nil {
 		return fmt.Errorf("save to file: %w", err)
