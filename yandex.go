@@ -21,7 +21,6 @@ import (
 // List of internal errors.
 var (
 	errTrackNotAvailable = errors.New("track not available")
-	errTrackExists       = errors.New("track already exists")
 )
 
 // pause is a time for sleep between track downloads.
@@ -199,16 +198,19 @@ func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist)
 			}
 
 			log.Printf("Track: %s", track.String())
-
 			file := path.Join(c.tracksDir, track.String()+".mp3")
+
+			if _, err := os.Stat(file); os.IsExist(err) {
+				log.Print("Skip")
+				continue
+			}
+
 			err := c.downloadTrack(ctx, track, file)
 			switch {
 			case err == nil:
 				log.Print("Downloaded")
 			case errors.Is(err, errTrackNotAvailable):
 				log.Print("Unavailable")
-			case errors.Is(err, errTrackExists):
-				log.Print("Skip")
 			case errors.Is(err, context.Canceled):
 				os.Remove(file) //nolint:errcheck,gosec
 				return err
@@ -239,14 +241,18 @@ func (c *YandexClient) downloadTrack(ctx context.Context, track Track, file stri
 	}
 	defer resp.Body.Close()
 
-	f, err := os.OpenFile(file, os.O_CREATE|os.O_RDWR, 0o600) //nolint:gosec
-	if os.IsExist(err) {
-		return errTrackExists
+	tmp, err := os.CreateTemp("", "music-*")
+	if err != nil {
+		return fmt.Errorf("create tmp file : %w", err)
 	}
-	defer f.Close() //nolint:errcheck
 
-	if _, err := io.Copy(f, resp.Body); err != nil {
+	if _, err := io.Copy(tmp, resp.Body); err != nil {
 		return fmt.Errorf("save to file: %w", err)
+	}
+	tmp.Close() //nolint:errcheck,gosec
+
+	if err = os.Rename(tmp.Name(), file); err != nil {
+		return fmt.Errorf("move tmp file to %s: %w", file, err)
 	}
 	return nil
 }
