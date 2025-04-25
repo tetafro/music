@@ -201,7 +201,7 @@ func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist)
 			log.Printf("Track: %s", track.String())
 			file := path.Join(c.tracksDir, track.String()+".mp3")
 
-			if _, err := os.Stat(file); os.IsExist(err) {
+			if _, err := os.Stat(file); err == nil {
 				log.Print("Skip")
 				continue
 			}
