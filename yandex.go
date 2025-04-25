@@ -213,7 +213,6 @@ func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist)
 			case errors.Is(err, errTrackNotAvailable):
 				log.Print("Unavailable")
 			case errors.Is(err, context.Canceled):
-				os.Remove(file) //nolint:errcheck,gosec
 				return err
 			default:
 				return fmt.Errorf("download track '%s': %w", track.String(), err)
