@@ -14,9 +14,14 @@ import (
 // Version is the current git tag, injected on build.
 var Version = "devel"
 
+// Command line arguments.
+var (
+	configFile  = flag.String("config", "config.yaml", "Configuration file")
+	showVersion = flag.Bool("version", false, "Show version")
+	debug       = flag.Bool("debug", false, "Show debug logs")
+)
+
 func main() {
-	configFile := flag.String("config", "config.yaml", "Configuration file")
-	showVersion := flag.Bool("version", false, "Show version")
 	flag.Parse()
 
 	if *showVersion {
@@ -33,18 +38,32 @@ func main() {
 
 	conf, err := ReadConfig(*configFile)
 	if err != nil {
-		log.Fatalf("Failed to read config: %v", err)
+		logFatal("Failed to read config: %v", err)
 	}
 
-	log.Print("Init client")
+	logInfo("Init client")
 	client, err := InitClient(ctx, conf)
 	if err != nil {
-		log.Fatalf("Failed to init client: %v", err)
+		logFatal("Failed to init client: %v", err)
 	}
 
-	log.Print("Start downloading")
+	logInfo("Start downloading")
 	if err = client.Download(ctx); err != nil {
-		log.Fatalf("Failed to download playlists: %v", err)
+		logFatal("Failed to download playlists: %v", err)
 	}
-	log.Print("Done")
+	logInfo("Done")
+}
+
+func logFatal(format string, args ...any) {
+	log.Fatalf(format, args...)
+}
+
+func logInfo(format string, args ...any) {
+	log.Printf(format, args...)
+}
+
+func logDebug(format string, args ...any) {
+	if *debug {
+		log.Printf(format, args...)
+	}
 }

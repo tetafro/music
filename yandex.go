@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -88,22 +87,22 @@ func InitClient(ctx context.Context, conf Config) (*YandexClient, error) {
 
 // Download downloads all playlists YAML files, and all tracks as MP3 files.
 func (c *YandexClient) Download(ctx context.Context) error {
-	log.Print("Get playlists")
+	logInfo("Get playlists")
 	playlists, err := c.getPlaylists(ctx)
 	if err != nil {
 		return fmt.Errorf("get playlists: %w", err)
 	}
 
-	log.Print("Save playlists to files")
+	logInfo("Save playlists to files")
 	for _, p := range playlists {
 		file := path.Join(c.playlistsDir, strings.ToLower(p.Name)+".yaml")
 		if err := c.savePlaylist(p, file); err != nil {
 			return fmt.Errorf("save playlist '%s': %w", p.Name, err)
 		}
 	}
-	log.Printf("Downloaded %d playlists", len(playlists))
+	logInfo("Downloaded %d playlists", len(playlists))
 
-	log.Print("Download tracks")
+	logInfo("Download tracks")
 	if err := c.downloadTracks(ctx, playlists); err != nil {
 		return fmt.Errorf("download tracks: %w", err)
 	}
@@ -133,7 +132,7 @@ func (c *YandexClient) getPlaylists(ctx context.Context) ([]Playlist, error) {
 	// Convert playlists to local format
 	playlists := make([]Playlist, len(resp.Result))
 	for i, r := range resp.Result {
-		log.Printf("Playlist: %s", r.Title)
+		logInfo("Playlist: %s", r.Title)
 		p, err := c.getPlaylist(ctx, r.Kind)
 		if err != nil {
 			return nil, fmt.Errorf("get playlist '%s': %w", r.Title, err)
@@ -194,7 +193,7 @@ func (c *YandexClient) savePlaylist(p Playlist, file string) error {
 func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist) error {
 	var downloaded, skipped, unavailable int
 	for _, playlist := range playlists {
-		log.Printf("Playlist: %s", playlist.Name)
+		logInfo("Playlist: %s", playlist.Name)
 		for _, track := range playlist.Tracks {
 			if ctx.Err() != nil {
 				return nil
@@ -202,6 +201,7 @@ func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist)
 
 			file := path.Join(c.tracksDir, track.String()+".mp3")
 			if _, err := os.Stat(file); err == nil {
+				logDebug("Skipped: %s", track.String())
 				skipped++
 				continue
 			}
@@ -210,9 +210,10 @@ func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist)
 			err := c.downloadTrack(ctx, track, file)
 			switch {
 			case err == nil:
-				log.Printf("Downloaded: %s (%s)", track.String(), time.Since(t).String())
+				logInfo("Downloaded: %s (%s)", track.String(), time.Since(t).String())
 				downloaded++
 			case errors.Is(err, errTrackNotAvailable):
+				logDebug("Unavailable: %s", track.String())
 				unavailable++
 			case errors.Is(err, context.Canceled):
 				return err
@@ -223,7 +224,7 @@ func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist)
 			time.Sleep(pause)
 		}
 	}
-	log.Printf("Stats: downloaded %d, skipped %d, unavailable %d",
+	logInfo("Stats: downloaded %d, skipped %d, unavailable %d",
 		downloaded, skipped, unavailable)
 	return nil
 }
