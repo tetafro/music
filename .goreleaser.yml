@@ -2,6 +2,8 @@ builds:
   - dir: .
     goos: [linux]
     goarch: [amd64]
+    ldflags:
+      - -X main.Version={{ .Tag }}
 checksum:
   name_template: checksums.txt
 snapshot:

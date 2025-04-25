@@ -8,7 +8,7 @@ lint:
 
 .PHONY: build
 build:
-	@ go build -o ./bin/music
+	@ go build -ldflags="-X main.Version=$(shell git describe --tags --abbrev=0)" -o ./bin/music
 
 .PHONY: run
 run:

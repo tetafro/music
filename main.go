@@ -4,15 +4,25 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
+// Version is the current git tag, injected on build.
+var Version = "devel"
+
 func main() {
 	configFile := flag.String("config", "config.yaml", "Configuration file")
+	showVersion := flag.Bool("version", false, "Show version")
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Println(Version)
+		return
+	}
 
 	ctx, cancel := signal.NotifyContext(
 		context.Background(),
