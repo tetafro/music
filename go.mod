@@ -1,4 +1,4 @@
-module github.com/tetafro/yamusic
+module github.com/tetafro/music
 
 go 1.21
 
