@@ -191,9 +191,9 @@ func (c *YandexClient) savePlaylist(p Playlist, file string) error {
 }
 
 func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist) error {
-	var downloaded, skipped, unavailable int
 	for _, playlist := range playlists {
 		logInfo("Playlist: %s", playlist.Name)
+		var downloaded, skipped, unavailable int
 		for _, track := range playlist.Tracks {
 			if ctx.Err() != nil {
 				return nil
@@ -223,9 +223,9 @@ func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist)
 
 			time.Sleep(pause)
 		}
+		logInfo("Stats: downloaded %d, skipped %d, unavailable %d",
+			downloaded, skipped, unavailable)
 	}
-	logInfo("Stats: downloaded %d, skipped %d, unavailable %d",
-		downloaded, skipped, unavailable)
 	return nil
 }
 
