@@ -8,8 +8,8 @@ lint:
 
 .PHONY: build
 build:
-	@ go build -o ./bin/yamusic
+	@ go build -o ./bin/music
 
 .PHONY: run
 run:
-	./bin/yamusic -config config.yaml
+	./bin/music -config config.yaml
