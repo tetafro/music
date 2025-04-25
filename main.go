@@ -34,7 +34,7 @@ func main() {
 
 	log.Print("Start downloading")
 	if err = client.Download(ctx); err != nil {
-		log.Fatalf("Failed to get playlists: %v", err)
+		log.Fatalf("Failed to download playlists: %v", err)
 	}
 	log.Print("Done")
 }
