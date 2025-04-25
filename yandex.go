@@ -213,7 +213,6 @@ func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist)
 				log.Printf("Downloaded: %s (%s)", track.String(), time.Since(t).String())
 				downloaded++
 			case errors.Is(err, errTrackNotAvailable):
-				log.Printf("Unavailable: %s", track.String())
 				unavailable++
 			case errors.Is(err, context.Canceled):
 				return err
