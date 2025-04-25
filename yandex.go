@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -241,7 +242,8 @@ func (c *YandexClient) downloadTrack(ctx context.Context, track Track, file stri
 	}
 	defer resp.Body.Close()
 
-	tmp, err := os.CreateTemp("", "music-*")
+	dir := filepath.Dir(file)
+	tmp, err := os.CreateTemp(dir, "tmp-*")
 	if err != nil {
 		return fmt.Errorf("create tmp file : %w", err)
 	}
