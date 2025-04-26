@@ -190,6 +190,13 @@ func (c *YandexClient) savePlaylist(p Playlist, file string) error {
 }
 
 func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist) error {
+	// Read existing tracks once to avoid checking if a file exist on every
+	// iteration of the loop
+	existingTracks, err := listFiles(c.tracksDir)
+	if err != nil {
+		return fmt.Errorf("list files: %w", err)
+	}
+
 	for _, playlist := range playlists {
 		logInfo("Playlist: %s (%d tracks)", playlist.Name, len(playlist.Tracks))
 		var downloaded, skipped, unavailable int
@@ -199,7 +206,7 @@ func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist)
 			}
 
 			file := path.Join(c.tracksDir, track.String()+".mp3")
-			if _, err := os.Stat(file); err == nil {
+			if _, ok := existingTracks[file]; ok {
 				logDebug("Skipped: %s", track.String())
 				skipped++
 				continue
@@ -262,4 +269,17 @@ func (c *YandexClient) downloadTrack(ctx context.Context, track Track, file stri
 		return fmt.Errorf("move tmp file to %s: %w", file, err)
 	}
 	return nil
+}
+
+func listFiles(dir string) (map[string]struct{}, error) {
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, fmt.Errorf("read directory: %w", err)
+	}
+
+	result := make(map[string]struct{}, len(files))
+	for _, f := range files {
+		result[filepath.Join(dir, f.Name())] = struct{}{}
+	}
+	return result, nil
 }
