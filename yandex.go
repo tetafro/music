@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	id3 "github.com/bogem/id3v2/v2"
 	rhttp "github.com/hashicorp/go-retryablehttp"
 	"github.com/ndrewnee/go-yamusic/yamusic"
 	"gopkg.in/yaml.v3"
@@ -230,6 +231,10 @@ func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist)
 				return fmt.Errorf("download track '%s': %w", track.String(), err)
 			}
 
+			if err := setTags(track, file); err != nil {
+				return fmt.Errorf("set tags for '%s': %w", track.String(), err)
+			}
+
 			time.Sleep(pause)
 		}
 		logInfo("Downloaded %d, skipped %d, unavailable %d",
@@ -268,6 +273,22 @@ func (c *YandexClient) downloadTrack(ctx context.Context, track Track, file stri
 
 	if err = os.Rename(tmp.Name(), file); err != nil {
 		return fmt.Errorf("move tmp file to %s: %w", file, err)
+	}
+	return nil
+}
+
+func setTags(track Track, file string) error {
+	tag, err := id3.Open(file, id3.Options{Parse: true})
+	if err != nil {
+		return fmt.Errorf("open file '%s': %w", file, err)
+	}
+	defer tag.Close() //nolint:errcheck
+
+	tag.SetArtist(strings.Join(track.Artists, ", "))
+	tag.SetTitle(track.Title)
+
+	if err := tag.Save(); err != nil {
+		return fmt.Errorf("save tags: %w", err)
 	}
 	return nil
 }
