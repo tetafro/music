@@ -18,11 +18,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// List of internal errors.
-var (
-	errTrackNotAvailable = errors.New("track not available")
-)
-
 // pause is a time for sleep between track downloads.
 const pause = 3 * time.Second
 
@@ -44,9 +39,10 @@ type Playlist struct {
 
 // Track is a short information about a track.
 type Track struct {
-	ID      int      `yaml:"id"`
-	Title   string   `yaml:"title"`
-	Artists []string `yaml:"artists"`
+	ID        int      `yaml:"id"`
+	Title     string   `yaml:"title"`
+	Artists   []string `yaml:"artists"`
+	Available bool     `yaml:"-"`
 }
 
 // String returns string representation of the track.
@@ -169,9 +165,10 @@ func (c *YandexClient) getPlaylist(ctx context.Context, kind int) (Playlist, err
 			return Playlist{}, fmt.Errorf("invalid track id: %s", track.Track.ID)
 		}
 		playlist.Tracks[i] = Track{
-			ID:      id,
-			Title:   track.Track.Title,
-			Artists: artists,
+			ID:        id,
+			Title:     track.Track.Title,
+			Artists:   artists,
+			Available: track.Track.Available,
 		}
 	}
 
@@ -189,6 +186,7 @@ func (c *YandexClient) savePlaylist(p Playlist, file string) error {
 	return nil
 }
 
+//nolint:cyclop
 func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist) error {
 	// Read existing tracks once to avoid checking if a file exist on every
 	// iteration of the loop
@@ -212,6 +210,12 @@ func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist)
 				continue
 			}
 
+			if !track.Available {
+				logDebug("Unavailable: %s", track.String())
+				unavailable++
+				continue
+			}
+
 			t := time.Now()
 			err := c.downloadTrack(ctx, track, file)
 			switch {
@@ -220,9 +224,6 @@ func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist)
 					track.String(),
 					time.Since(t).Truncate(100*time.Millisecond).String())
 				downloaded++
-			case errors.Is(err, errTrackNotAvailable):
-				logDebug("Unavailable: %s", track.String())
-				unavailable++
 			case errors.Is(err, context.Canceled):
 				return err
 			default:
@@ -240,7 +241,7 @@ func (c *YandexClient) downloadTracks(ctx context.Context, playlists []Playlist)
 func (c *YandexClient) downloadTrack(ctx context.Context, track Track, file string) error {
 	url, err := c.api.Tracks().GetDownloadURL(ctx, track.ID)
 	if err != nil {
-		return errTrackNotAvailable
+		return fmt.Errorf("get track URL: %w", err)
 	}
 
 	req, err := rhttp.NewRequestWithContext(ctx, http.MethodGet, url, nil)
